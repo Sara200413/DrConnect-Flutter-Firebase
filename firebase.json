@@ -1,0 +1,6 @@
+{"flutter":{"platforms":{"android":{"default":
+{"projectId":"doctor-app-57570","appId":"1:1020034317708:android:6c26982edc08d2777eeaa9",
+  "fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":
+{"projectId":"doctor-app-57570","configurations":{"android":"1:1020034317708:android:6c26982edc08d2777eeaa9",
+  "ios":"1:1020034317708:ios:0710d24cae2af3ce7eeaa9","web":"1:1020034317708:web:513e4ca922a7df437eeaa9",
+  "windows":"1:1020034317708:web:513e4ca922a7df437eeaa9"}}}}}}
