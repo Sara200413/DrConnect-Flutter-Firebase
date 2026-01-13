@@ -24,9 +24,7 @@ class AppointmentModel {
       'doctorId': doctorId,
       'doctorName': doctorName,
       'date': Timestamp.fromDate(date),
-      'status': status,
-    };
-  }
+      'status': status,};}
   factory AppointmentModel.fromFirestore(DocumentSnapshot doc) {
     Map data = doc.data() as Map<String, dynamic>;
     return AppointmentModel(

@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Couleurs Modernes et Professionnelles
-  static const Color primaryColor = Color(0xFF2563EB); // Bleu moderne
-  static const Color secondaryColor = Color(0xFF10B981); // Vert accent
-  static const Color backgroundColor = Color(0xFFF8FAFC); // Gris ultra-clair
-  static const Color cardColor = Color(0xFFFFFFFF); // Blanc pur
-  static const Color darkText = Color(0xFF0F172A); // Noir doux
-  static const Color lightText = Color(0xFF64748B); // Gris moyen
-  static const Color errorColor = Color(0xFFEF4444); // Rouge moderne
-  static const Color successColor = Color(0xFF10B981); // Vert succès
-  static const Color warningColor = Color(0xFFF59E0B); // Orange
-
-  // Gradients
+  static const Color primaryColor = Color(0xFF2563EB);
+  static const Color secondaryColor = Color(0xFF10B981);
+  static const Color backgroundColor = Color(0xFFF8FAFC);
+  static const Color cardColor = Color(0xFFFFFFFF);
+  static const Color darkText = Color(0xFF0F172A);
+  static const Color lightText = Color(0xFF64748B);
+  static const Color errorColor = Color(0xFFEF4444);
+  static const Color successColor = Color(0xFF10B981);
+  static const Color warningColor = Color(0xFFF59E0B);
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
     begin: Alignment.topLeft,

@@ -29,25 +29,16 @@ class AuthService {
     String? bio,
     String? specialty,
     required String role,
-  }) async {
-    String res = "Une erreur s'est produite";
-    try {
-      if (email.isNotEmpty && password.isNotEmpty && fullName.isNotEmpty) {
+  }) async { String res = "Une erreur s'est produite";
+    try { if (email.isNotEmpty && password.isNotEmpty && fullName.isNotEmpty) {
         UserCredential cred = await _auth.createUserWithEmailAndPassword(
           email: email,
-          password: password,
-        );
+          password: password,);
         String uid = cred.user!.uid;
-        // Sauvegarder dans la collection universelle 'users'
-        UserModel baseUser = UserModel(
-          uid: uid,
-          email: email,
-          fullName: fullName,
+        UserModel baseUser = UserModel(uid: uid, email: email, fullName: fullName,
           phoneNumber: phoneNumber,
           role: role,
-        );
-        await _firestore.collection('users').doc(uid).set(baseUser.toMap());
-        //  Créer le profil spécifique Docteur
+        );await _firestore.collection('users').doc(uid).set(baseUser.toMap());
         if (role == 'doctor') {
           DoctorModel doctorProfile = DoctorModel(
             uid: uid,

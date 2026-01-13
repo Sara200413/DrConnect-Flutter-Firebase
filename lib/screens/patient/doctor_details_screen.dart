@@ -5,13 +5,16 @@ import '../../core/themes/app_theme.dart';
 import '../../core/constants/clinic_hours.dart';
 import '../../core/utils/date_utils.dart';
 import '../../widgets/shared/custom_button.dart';
+
 class DoctorDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> doctorData;
   final String doctorId;
   const DoctorDetailsScreen({Key? key, required this.doctorData, required this.doctorId}) : super(key: key);
+
   @override
   State<DoctorDetailsScreen> createState() => _DoctorDetailsScreenState();
 }
+
 class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
   DateTime _selectedDate = DateTime.now();
   int? _selectedHour;
@@ -21,7 +24,6 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    // Logique: Commencer à demain, sauter Dimanche
     DateTime tomorrow = DateTime.now().add(const Duration(days: 1));
     if (tomorrow.weekday == ClinicHours.closedDay) {
       tomorrow = tomorrow.add(const Duration(days: 1));
@@ -29,7 +31,7 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
     _selectedDate = tomorrow;
     _checkAvailability();
   }
-  // Vérifie les créneaux déjà pris (pending ou approved)
+
   Future<void> _checkAvailability() async {
     setState(() {
       _takenHours = [];
@@ -49,7 +51,6 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
 
       List<int> busy = [];
       for (var doc in snapshot.docs) {
-        // Bloque le créneau si le statut n'est PAS 'cancelled' (donc pending ou approved)
         if (doc['status'] != 'cancelled') {
           DateTime date = (doc['date'] as Timestamp).toDate();
           busy.add(date.hour);
@@ -63,18 +64,18 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
       setState(() => _isLoading = false);
     }
   }
-  // Sélecteur de date
+
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now().add(const Duration(days: 1)),
       lastDate: DateTime(2030),
-      selectableDayPredicate: (day) => day.weekday != ClinicHours.closedDay, // Bloque Dimanche
+      selectableDayPredicate: (day) => day.weekday != ClinicHours.closedDay,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: AppTheme.primaryColor),
+            colorScheme: const ColorScheme.light(primary: Color(0xFF2563EB)),
           ),
           child: child!,
         );
@@ -86,39 +87,42 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
       _checkAvailability();
     }
   }
-  // Affiche la boîte de confirmation modale (Bottom Sheet)
+
   void _showConfirmationSheet() {
     if (_selectedHour == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: AppTheme.errorColor, content: Text("Veuillez choisir une heure")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text("Veuillez choisir une heure")));
       return;
     }
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Confirmer le rendez-vous", style: Theme.of(context).textTheme.headlineMedium),
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)))),
+            const SizedBox(height: 24),
+            const Text("Récapitulatif", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
             const SizedBox(height: 20),
-            _summaryRow(Icons.person, "Médecin", "Dr. ${widget.doctorData['fullName']}"),
-            _summaryRow(Icons.calendar_today, "Date", MyDateUtils.formatDate(_selectedDate)),
-            _summaryRow(Icons.access_time, "Heure", MyDateUtils.formatTime(_selectedHour!)),
-            _summaryRow(Icons.attach_money, "Prix", "${widget.doctorData['price']} DH"),
-            const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: CustomButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _processBooking();
-                },
-                text: "Valider la réservation",
-              ),
-            )
+            _summaryRow(Icons.person_rounded, "Docteur", "Dr. ${widget.doctorData['fullName']}"),
+            _summaryRow(Icons.calendar_month_rounded, "Date", MyDateUtils.formatDate(_selectedDate)),
+            _summaryRow(Icons.access_time_filled_rounded, "Heure", MyDateUtils.formatTime(_selectedHour!)),
+            _summaryRow(Icons.payments_rounded, "Tarif", "${widget.doctorData['price']} DH"),
+            const SizedBox(height: 24),
+            CustomButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _processBooking();
+              },
+              text: "CONFIRMER",
+            ),
           ],
         ),
       ),
@@ -130,10 +134,10 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, color: AppTheme.lightText),
-          const SizedBox(width: 10),
-          Text("$label : ", style: Theme.of(context).textTheme.bodyMedium),
-          Text(value, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+          Icon(icon, color: const Color(0xFF2563EB), size: 18),
+          const SizedBox(width: 12),
+          Text("$label: ", style: const TextStyle(color: Color(0xFF64748B), fontSize: 13)),
+          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B)), overflow: TextOverflow.ellipsis)),
         ],
       ),
     );
@@ -143,7 +147,6 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
     setState(() => _isLoading = true);
     try {
       DateTime finalDate = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, _selectedHour!, 0);
-      //  Double Check Anti-Doublon
       var check = await FirebaseFirestore.instance
           .collection('appointments')
           .where('doctorId', isEqualTo: widget.doctorId)
@@ -152,11 +155,11 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
 
       if (check.docs.any((d) => d['status'] != 'cancelled')) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: AppTheme.errorColor, content: Text("Oups ! Ce créneau est déjà pris.")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(backgroundColor: Colors.red, content: Text("Ce créneau est déjà pris.")));
         _checkAvailability();
         return;
       }
-      //  Booking
+
       String uid = FirebaseAuth.instance.currentUser!.uid;
       var userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
@@ -170,22 +173,16 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // Succès
       if (!mounted) return;
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          icon: const Icon(Icons.check_circle, color: AppTheme.successColor, size: 50),
-          title: const Text("Réservation envoyée"),
-          content: const Text("Vous pouvez suivre le statut dans 'Mes RDV'."),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          icon: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 50),
+          title: const Text("Envoyé !"),
+          content: const Text("En attente de validation par le docteur."),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                Navigator.pop(context);
-              },
-              child: const Text("Super"),
-            )
+            TextButton(onPressed: () { Navigator.pop(ctx); Navigator.pop(context); }, child: const Text("OK")),
           ],
         ),
       );
@@ -199,156 +196,156 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isSmallScreen = screenWidth < 360;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Prendre RDV"), backgroundColor: Colors.white, foregroundColor: AppTheme.darkText, elevation: 0),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(radius: 30, backgroundColor: AppTheme.primaryColor.withOpacity(0.1), child: const Icon(Icons.person, color: AppTheme.primaryColor, size: 30)),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text("Dr. ${widget.doctorData['fullName']}", style: Theme.of(context).textTheme.titleLarge, overflow: TextOverflow.ellipsis), // FIX DÉBORDEMENT
-                            Text(widget.doctorData['specialty'] ?? "Spécialité inconnue", style: Theme.of(context).textTheme.bodyMedium, overflow: TextOverflow.ellipsis), // FIX DÉBORDEMENT
-                            const SizedBox(height: 5),
-                            Row(
-                              children: [
-                                const Icon(Icons.attach_money, color: AppTheme.successColor, size: 18),
-                                const SizedBox(width: 4),
-                                Text("${widget.doctorData['price']} DH", style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.successColor)),
-                              ],
-                            ),
-                          ]),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 30),
-                    Text("Qualifications & Parcours", style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.school_outlined, color: AppTheme.primaryColor, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            widget.doctorData['bio'] ?? 'Diplômes non renseignés',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const Divider(height: 30),
-                    Text("Lieu de Consultation", style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.location_on, color: AppTheme.primaryColor, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(widget.doctorData['clinicName'] ?? "Clinique Inconnue", style: Theme.of(context).textTheme.bodyLarge),
-                              Text(widget.doctorData['address'] ?? "Adresse non renseignée", style: Theme.of(context).textTheme.bodyMedium),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 100,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF2563EB),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
             ),
-
-            const SizedBox(height: 40),
-
-            Text(" Choisissez le jour", style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 10),
-            InkWell(
-              onTap: _pickDate,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
+            flexibleSpace: const FlexibleSpaceBar(
+              centerTitle: true,
+              title: Text("Réservation", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              background: DecoratedBox(
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppTheme.primaryColor, width: 1.5),
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(MyDateUtils.formatDate(_selectedDate), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
-                    const Icon(Icons.calendar_today, color: AppTheme.primaryColor),
-                  ],
+                  gradient: LinearGradient(colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)]),
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(top: 5.0, left: 5.0),
-              child: Text("Dimanche est fermé", style: TextStyle(fontSize: 12, color: AppTheme.errorColor)),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDoctorHeader(isSmallScreen),
+                  const SizedBox(height: 24),
+                  const Text("1. Choisir la date", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                  const SizedBox(height: 12),
+                  _buildDatePickerButton(isSmallScreen),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("2. Heures disponibles", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                      if (_isLoading) const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTimeSlotsGrid(isSmallScreen, screenWidth),
+                  const SizedBox(height: 120),
+                ],
+              ),
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: _buildBottomAction(),
+    );
+  }
 
-            const SizedBox(height: 30),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildDoctorHeader(bool isSmall) {
+    return Container(
+      padding: EdgeInsets.all(isSmall ? 16 : 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15)],
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: isSmall ? 50 : 60, width: isSmall ? 50 : 60,
+            decoration: BoxDecoration(color: const Color(0xFF2563EB).withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+            child: Icon(Icons.person_rounded, color: const Color(0xFF2563EB), size: isSmall ? 28 : 32),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Horaires disponibles", style: Theme.of(context).textTheme.titleLarge),
-                if (_isLoading) const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2)),
+                Text("Dr. ${widget.doctorData['fullName']}", style: TextStyle(fontSize: isSmall ? 16 : 18, fontWeight: FontWeight.bold)),
+                Text(widget.doctorData['specialty'] ?? "Médecin", style: const TextStyle(color: Color(0xFF2563EB), fontSize: 12, fontWeight: FontWeight.w600)),
               ],
             ),
-            const SizedBox(height: 15),
+          ),
+        ],
+      ),
+    );
+  }
 
-            Wrap(
-              spacing: 12, runSpacing: 12,
-              children: ClinicHours.workingHours.map((hour) {
-                bool isTaken = _takenHours.contains(hour);
-                bool isSelected = _selectedHour == hour;
-                return ChoiceChip(
-                  label: Text(MyDateUtils.formatTime(hour)),
-                  selected: isSelected,
-                  onSelected: isTaken ? null : (v) => setState(() => _selectedHour = v ? hour : null),
-                  selectedColor: AppTheme.primaryColor,
-                  backgroundColor: Colors.white,
-                  disabledColor: Colors.grey.shade100,
-                  labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : (isTaken ? Colors.grey : AppTheme.darkText),
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal
-                  ),
-                  side: BorderSide(color: isTaken ? Colors.grey.shade300 : Colors.grey.shade200),
-                );
-              }).toList(),
-            ),
-            if (_takenHours.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text("Les créneaux grisés sont réservés.", style: Theme.of(context).textTheme.bodyMedium),
-              ),
+  Widget _buildDatePickerButton(bool isSmall) {
+    return InkWell(
+      onTap: _pickDate,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: EdgeInsets.all(isSmall ? 12 : 16),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_month_rounded, color: Color(0xFF2563EB), size: 20),
+            const SizedBox(width: 12),
+            Text(MyDateUtils.formatDate(_selectedDate), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const Spacer(),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0,-5))]),
-        child: CustomButton(
-          text: _selectedHour != null ? "Confirmer pour ${MyDateUtils.formatTime(_selectedHour!)}" : "Choisir une heure",
-          onPressed: _selectedHour != null ? _showConfirmationSheet : null,
-          isLoading: _isLoading,
-        ),
+    );
+  }
+
+  Widget _buildTimeSlotsGrid(bool isSmall, double width) {
+    // Calcul de la largeur d'un slot pour qu'il s'adapte à l'écran
+    double slotWidth = (width - (isSmall ? 32 : 48) - 24) / 3;
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: ClinicHours.workingHours.map((hour) {
+        bool isTaken = _takenHours.contains(hour);
+        bool isSelected = _selectedHour == hour;
+        return InkWell(
+          onTap: isTaken ? null : () => setState(() => _selectedHour = hour),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: slotWidth,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF2563EB) : (isTaken ? const Color(0xFFF1F5F9) : Colors.white),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0)),
+            ),
+            child: Center(
+              child: Text(
+                MyDateUtils.formatTime(hour),
+                style: TextStyle(color: isSelected ? Colors.white : (isTaken ? Colors.grey : Colors.black), fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildBottomAction() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFF1F5F9)))),
+      child: CustomButton(
+        text: _selectedHour != null ? "RÉSERVER À ${MyDateUtils.formatTime(_selectedHour!)}" : "CHOISIR UNE HEURE",
+        onPressed: _selectedHour != null ? _showConfirmationSheet : null,
+        isLoading: _isLoading,
       ),
     );
   }

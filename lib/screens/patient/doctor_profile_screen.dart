@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/themes/app_theme.dart';
 import 'doctor_details_screen.dart';
+
 class DoctorProfileScreen extends StatelessWidget {
   final Map<String, dynamic> doctorData;
   final String doctorId;
@@ -13,142 +14,191 @@ class DoctorProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Extraction des données
     final String fullName = doctorData['fullName'] ?? 'Docteur';
     final String specialty = doctorData['specialty'] ?? 'Généraliste';
-    final String clinicName = doctorData['clinicName'] ?? '';
-    final String address = doctorData['address'] ?? '';
+    final String clinicName = doctorData['clinicName'] ?? 'Cabinet Médical';
+    final String address = doctorData['address'] ?? 'Adresse non renseignée';
     final double price = (doctorData['price'] ?? 0).toDouble();
     final String bio = doctorData['bio'] ?? 'Non renseigné';
 
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: CustomScrollView(
-        slivers: [
+    // Responsivité : Détection de la taille
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bool isSmallScreen = screenHeight < 700;
 
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // 1. App Bar adaptative
           SliverAppBar(
-            expandedHeight: 250,
+            expandedHeight: isSmallScreen ? 200 : 250,
             pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF2563EB),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(fullName, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-              centerTitle: true,
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.primaryColor, Color(0xFF4A90E2)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                      ),
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: Column(
+                  // Décorations cercles
+                  Positioned(
+                    top: -40,
+                    right: -40,
+                    child: CircleAvatar(radius: 100, backgroundColor: Colors.white.withOpacity(0.05)),
+                  ),
+                  // Contenu Header
+                  Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 40),
-                      Container(
-                        width: 90, height: 90,
-                        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 15)]),
-                        child: const Icon(Icons.person, size: 50, color: AppTheme.primaryColor),
+                      CircleAvatar(
+                        radius: isSmallScreen ? 35 : 45,
+                        backgroundColor: Colors.white,
+                        child: Icon(Icons.person_rounded, size: isSmallScreen ? 40 : 50, color: const Color(0xFF2563EB)),
                       ),
-                      const SizedBox(height: 10),
-                      Text(specialty, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70)),
+                      const SizedBox(height: 12),
+                      Text(
+                        fullName,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isSmallScreen ? 20 : 24,
+                            fontWeight: FontWeight.bold
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          specialty.toUpperCase(),
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
           ),
 
+          // 2. Contenu scrollable
           SliverToBoxAdapter(
-            child: Column(
-              children: [
-                Container(
-                  margin: const EdgeInsets.all(20),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildInfoRow(context, icon: Icons.payments_outlined, label: 'Prix de consultation', value: '$price DH', valueColor: AppTheme.successColor, iconColor: AppTheme.successColor),
-                      const Divider(height: 30),
-                      _buildInfoRow(context, icon: Icons.local_hospital_outlined, label: 'Cabinet / Clinique', value: clinicName, iconColor: AppTheme.primaryColor),
-                      const SizedBox(height: 16),
-                      _buildInfoRow(context, icon: Icons.location_on_outlined, label: 'Adresse Complète', value: address, iconColor: AppTheme.errorColor),
-                    ],
-                  ),
-                ),
-
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Qualifications & Formation', style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: 16),
-                      _buildDetailTile(context,
-                        icon: Icons.school_outlined,
-                        title: 'Parcours',
-                        subtitle: bio,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDetailTile(context,
-                        icon: Icons.access_time_outlined,
-                        title: 'Expérience',
-                        subtitle: 'Plus de 10 ans en pratique clinique',
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorDetailsScreen(
-                          doctorData: doctorData,
-                          doctorId: doctorId,
-                        )));
-                      },
-                      child: const Text('VOIR DISPONIBILITÉS & RÉSERVER'),
+            child: Padding(
+              padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
+              child: Column(
+                children: [
+                  // Carte 1 : Infos clés
+                  _buildPremiumCard(
+                    child: Column(
+                      children: [
+                        _buildInfoRow(
+                          icon: Icons.payments_rounded,
+                          label: 'Tarif Consultation',
+                          value: '$price DH',
+                          color: const Color(0xFF10B981),
+                          isSmall: isSmallScreen,
+                        ),
+                        const Divider(height: 32, color: Color(0xFFF1F5F9)),
+                        _buildInfoRow(
+                          icon: Icons.location_on_rounded,
+                          label: 'Lieu de consultation',
+                          value: "$clinicName\n$address",
+                          color: const Color(0xFF2563EB),
+                          isSmall: isSmallScreen,
+                        ),
+                      ],
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 40),
-              ],
+                  const SizedBox(height: 20),
+
+                  // Carte 2 : Bio
+                  _buildPremiumCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Expertise & Bio',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.school_rounded, color: Color(0xFF94A3B8), size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                bio,
+                                style: const TextStyle(color: Color(0xFF64748B), fontSize: 14, height: 1.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 120), // Espace pour le bouton
+                ],
+              ),
             ),
           ),
         ],
       ),
+      bottomSheet: _buildBottomAction(context, isSmallScreen),
     );
   }
-  Widget _buildInfoRow(BuildContext context, {required IconData icon, required String label, required String value, Color? valueColor, Color? iconColor}) {
+
+  Widget _buildPremiumCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF2563EB).withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 10))
+        ],
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildInfoRow({required IconData icon, required String label, required String value, required Color color, required bool isSmall}) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: (iconColor ?? AppTheme.primaryColor).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: iconColor ?? AppTheme.primaryColor, size: 24),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 4),
-              Text(value, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600, color: valueColor ?? AppTheme.darkText)),
+              Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))),
             ],
           ),
         ),
@@ -156,25 +206,33 @@ class DoctorProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailTile(BuildContext context, {required IconData icon, required String title, required String subtitle}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 24, color: AppTheme.primaryColor.withOpacity(0.8)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-              ],
+  Widget _buildBottomAction(BuildContext context, bool isSmall) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 10, 20, isSmall ? 20 : 30),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
+      ),
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DoctorDetailsScreen(
+                doctorData: doctorData,
+                doctorId: doctorId,
+              ),
             ),
-          ),
-        ],
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2563EB),
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 0,
+        ),
+        child: const Text("VOIR LES DISPONIBILITÉS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
       ),
     );
   }
